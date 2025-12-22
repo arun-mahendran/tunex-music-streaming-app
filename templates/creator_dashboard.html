@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TuneX | Creator Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+  --bg: radial-gradient(circle at top left, #1b2735, #090a0f);
+  --glass: rgba(255,255,255,0.08);
+  --border: rgba(255,255,255,0.12);
+  --text: #ffffff;
+  --muted: rgba(255,255,255,0.65);
+  --accent: #4fd1ff;
+  --danger: #ff6b6b;
+  --radius-lg: 22px;
+  --radius-md: 14px;
+  --blur: blur(16px);
+  --transition: all 0.3s ease;
+}
+
+body.light {
+  --bg: linear-gradient(135deg, #f5f7fa, #e4ecf3);
+  --glass: rgba(255,255,255,0.9);
+  --border: rgba(0,0,0,0.08);
+  --text: #111;
+  --muted: rgba(0,0,0,0.6);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  min-height: 100vh;
+  font-family: "Inter", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+header {
+  position: sticky;
+  top: 0;
+  padding: 18px 36px;
+  display: flex;
+  justify-content: space-between;
+  backdrop-filter: var(--blur);
+  background: rgba(0,0,0,0.35);
+  border-bottom: 1px solid var(--border);
+}
+
+.logo { font-size: 22px; font-weight: 700; }
+
+.avatar-wrapper { position: relative; }
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #89f7fe);
+  color: #000;
+  display: grid;
+  place-items: center;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.menu {
+  position: absolute;
+  right: 0;
+  top: 56px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  min-width: 180px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+  transition: var(--transition);
+}
+
+.menu.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.menu button, .menu a {
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 50px 24px 80px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 30px;
+}
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+.card {
+  background: var(--glass);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  padding: 28px;
+  backdrop-filter: var(--blur);
+}
+
+label { font-size: 13px; color: var(--muted); }
+
+/* ===== INPUTS ===== */
+input, select {
+  width: 100%;
+  padding: 14px;
+  margin-top: 6px;
+  margin-bottom: 18px;
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.18);
+  color: var(--text);
+  border: none;
+}
+
+/* 🔥 PLACEHOLDER FIX */
+input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+/* Dropdown options */
+select option {
+  background: #fff;
+  color: #000;
+}
+
+button.primary {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: linear-gradient(135deg, var(--accent), #89f7fe);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ===== MANAGE SONGS ===== */
+.song-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.song-title-input {
+  font-size: 16px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  width: 100%;
+}
+
+.song-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.song-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.delete-btn { color: var(--danger); }
+.save-btn { color: var(--accent); }
+
+/* ===== DELETE MODAL ===== */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-box {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  backdrop-filter: var(--blur);
+  border-radius: var(--radius-lg);
+  padding: 26px;
+  width: 320px;
+  text-align: center;
+}
+
+.modal-box p {
+  margin: 14px 0 22px;
+  color: var(--muted);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.modal-actions button {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  background: rgba(255,255,255,0.15);
+  color: var(--text);
+}
+
+.confirm-btn {
+  background: var(--danger);
+  color: #fff;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">TuneX</div>
+  <div class="avatar-wrapper">
+    <div class="avatar" onclick="toggleMenu()">
+      {{ username[0]|upper }}
+    </div>
+    <div class="menu" id="menu">
+      <button onclick="toggleTheme()">Toggle Theme</button>
+      <a href="/logout">Logout</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <h1>Creator Studio</h1>
+  <p style="color:var(--muted);margin-bottom:36px;">Upload, manage and control your music</p>
+
+  <div class="grid">
+
+    <!-- UPLOAD -->
+    <div class="card">
+      <h3>Upload Track</h3><br>
+      <form action="/creator/upload" method="POST" enctype="multipart/form-data">
+        <label>Song Title</label>
+        <input type="text" name="title" placeholder="Title" required>
+
+        <label>Genre</label>
+        <select name="genre_id" required>
+          {% for genre in genres %}
+          <option value="{{ genre.genre_id }}">{{ genre.genre_name }}</option>
+          {% endfor %}
+        </select>
+
+        <label>Audio File</label>
+        <input type="file" name="song" required>
+
+        <button class="primary">Upload Song</button>
+      </form>
+    </div>
+
+    <!-- MANAGE SONGS -->
+    <div class="card">
+      <h3>Manage Songs</h3><br>
+
+      {% for song in songs %}
+      <div class="song-row">
+
+        <form action="/creator/edit/{{ song.song_id }}" method="POST" style="width:100%;">
+          <input class="song-title-input" name="title" value="{{ song.title }}" readonly>
+          <small style="color:var(--muted);">
+            {% set m = song.duration // 60 %}
+            {% set s = song.duration % 60 %}
+            {{ m }}:{{ '%02d' % s }}
+          </small>
+        </form>
+
+        <div class="song-actions">
+          <button type="button" onclick="enableEdit(this)">✏️</button>
+          <button type="submit" class="save-btn" style="display:none"
+            onclick="this.closest('.song-row').querySelector('form').submit()">✔</button>
+          <button class="delete-btn" onclick="openDeleteModal(this)">🗑</button>
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal" id="deleteModal">
+  <div class="modal-box">
+    <h3>Delete Song?</h3>
+    <p>This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="cancel-btn" onclick="closeDeleteModal()">Cancel</button>
+      <button class="confirm-btn" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<form id="deleteForm" method="POST" style="display:none;"></form>
+
+<script>
+let deleteAction = "";
+
+function toggleMenu() {
+  document.getElementById("menu").classList.toggle("active");
+}
+
+function toggleTheme() {
+  document.body.classList.toggle("light");
+  localStorage.setItem("theme",
+    document.body.classList.contains("light") ? "light" : "dark");
+}
+
+(function () {
+  if (localStorage.getItem("theme") === "light") {
+    document.body.classList.add("light");
+  }
+})();
+
+function enableEdit(btn) {
+  const row = btn.closest(".song-row");
+  const input = row.querySelector(".song-title-input");
+  const saveBtn = row.querySelector(".save-btn");
+  input.removeAttribute("readonly");
+  input.focus();
+  saveBtn.style.display = "inline";
+}
+
+/* ===== DELETE FLOW ===== */
+function openDeleteModal(btn) {
+  const songRow = btn.closest(".song-row");
+  const songId = songRow.querySelector("form").action;
+  deleteAction = songId.replace("/creator/edit/", "/creator/delete/");
+  document.getElementById("deleteModal").classList.add("active");
+}
+
+function closeDeleteModal() {
+  document.getElementById("deleteModal").classList.remove("active");
+}
+
+function confirmDelete() {
+  const form = document.getElementById("deleteForm");
+  form.action = deleteAction;
+  form.submit();
+}
+</script>
+
+</body>
+</html>

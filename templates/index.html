@@ -19,7 +19,6 @@
             min-height: 100vh;
         }
 
-        /* ---------- NAVBAR ---------- */
         header {
             display: flex;
             justify-content: space-between;
@@ -44,7 +43,6 @@
             transition: all 0.3s ease;
         }
 
-        /* Login button */
         .login-btn {
             background-color: transparent;
             color: white;
@@ -58,7 +56,6 @@
             box-shadow: 0 8px 20px rgba(79,209,255,0.4);
         }
 
-        /* Register button */
         .register-btn {
             background-color: #4fd1ff;
             color: black;
@@ -71,7 +68,6 @@
             box-shadow: 0 10px 25px rgba(79,209,255,0.6);
         }
 
-        /* ---------- HERO SECTION ---------- */
         .hero {
             display: flex;
             flex-direction: column;
@@ -93,7 +89,6 @@
             color: #d0e6ef;
         }
 
-        /* Get Started button */
         .hero button {
             padding: 14px 32px;
             font-size: 16px;
@@ -111,7 +106,6 @@
             box-shadow: 0 12px 30px rgba(79,209,255,0.7);
         }
 
-        /* ---------- FEATURE SECTION ---------- */
         .features {
             display: flex;
             justify-content: center;
@@ -144,7 +138,6 @@
             color: #d0e6ef;
         }
 
-        /* ---------- FOOTER ---------- */
         footer {
             text-align: center;
             padding: 20px;
@@ -153,15 +146,37 @@
             background-color: rgba(0, 0, 0, 0.6);
         }
 
-        @media (max-width: 600px) {
-            header {
-                flex-direction: column;
-                gap: 15px;
-            }
+        /* ---------- ROLE MODAL ---------- */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            justify-content: center;
+            align-items: center;
+        }
 
-            .hero h1 {
-                font-size: 36px;
-            }
+        .modal-box {
+            background: rgba(0,0,0,0.9);
+            padding: 30px;
+            border-radius: 14px;
+            width: 280px;
+            text-align: center;
+        }
+
+        .modal-box h3 {
+            margin-bottom: 20px;
+        }
+
+        .modal-box button {
+            width: 100%;
+            margin: 8px 0;
+            padding: 10px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            background-color: #4fd1ff;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -170,18 +185,18 @@
 <header>
     <div class="logo">TuneX</div>
     <nav>
-        <button class="login-btn">Login</button>
-        <button class="register-btn">Register</button>
+        <button class="login-btn" onclick="openModal('login')">Login</button>
+        <button class="register-btn" onclick="openModal('register')">Register</button>
     </nav>
 </header>
 
 <section class="hero">
     <h1>Stream Music Without Limits</h1>
     <p>
-        Discover, stream, and enjoy millions of songs from artists around the world.
+        Discover, stream, and enjoy music seamlessly.
         Your music, Anytime, Anywhere.
     </p>
-    <button>Get Started</button>
+    <button onclick="openModal('login')">Get Started</button>
 </section>
 
 <section class="features">
@@ -189,21 +204,51 @@
         <h3>High Quality Audio</h3>
         <p>Experience crystal-clear sound with high bitrate streaming.</p>
     </div>
-
     <div class="feature-card">
         <h3>Create Playlists</h3>
-        <p>Build and share playlists that match your mood.</p>
+        <p>Build playlists that match your mood.</p>
     </div>
-
     <div class="feature-card">
         <h3>Offline Mode</h3>
-        <p>Download your favorite tracks and listen offline.</p>
+        <p>Listen to your favorite tracks anytime.</p>
     </div>
 </section>
 
 <footer>
     © 2025 TuneX Music Streaming. All rights reserved.
 </footer>
+
+<!-- ROLE MODAL -->
+<div class="modal" id="roleModal">
+    <div class="modal-box">
+        <h3 id="modalTitle"></h3>
+        <button onclick="goRole('USER')">User</button>
+        <button onclick="goRole('CREATOR')">Creator</button>
+        <button style="background:#333;color:white" onclick="closeModal()">Cancel</button>
+    </div>
+</div>
+
+<script>
+    let action = "";
+
+    function openModal(type) {
+        action = type;
+        document.getElementById("modalTitle").innerText =
+            type === "login" ? "Login as" : "Register as";
+        document.getElementById("roleModal").style.display = "flex";
+    }
+
+    function closeModal() {
+        document.getElementById("roleModal").style.display = "none";
+    }
+
+    function goRole(role) {
+        window.location.href =
+            action === "login"
+                ? `/login?role=${role}`
+                : `/register?role=${role}`;
+    }
+</script>
 
 </body>
 </html>

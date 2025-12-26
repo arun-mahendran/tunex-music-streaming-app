@@ -1,4 +1,5 @@
 from controller.database import db
+from datetime import datetime
 
 
 class User(db.Model):
@@ -8,6 +9,8 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
 
+    is_blocked = db.Column(db.Boolean, default=False, nullable=False)
+    
     roles = db.relationship(
         'Role',
         secondary='user_roles',
@@ -46,24 +49,22 @@ class Song(db.Model):
 
     song_id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
-
-    # REQUIRED FOR UPLOAD
     file_path = db.Column(db.String(255), nullable=False)
-
-    # TEMP: allow NULL until duration logic added
     duration = db.Column(db.Integer, nullable=True)
-
-    # NEW: Track how many times the song was played
     play_count = db.Column(db.Integer, default=0)
-
-    # WHO UPLOADED THE SONG
     creator_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
-
     genre_id = db.Column(db.Integer, db.ForeignKey('genres.genre_id'), nullable=False)
 
     genre = db.relationship('Genre', backref=db.backref('songs', lazy=True))
     creator = db.relationship('User', backref=db.backref('uploaded_songs', lazy=True))
 
+    artists = db.relationship(
+        'Artist',
+        secondary='song_artists',
+        backref=db.backref('songs', lazy='joined', overlaps="song_artists"),
+        lazy='joined',
+        overlaps="song_artists"
+    )
 
 
 class SongArtist(db.Model):
@@ -95,3 +96,9 @@ class PlaylistSong(db.Model):
     playlist = db.relationship('Playlist', backref=db.backref('playlist_songs', lazy=True))
     song = db.relationship('Song', backref=db.backref('playlist_songs', lazy=True))
 
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    user = db.relationship('User', backref='notifications')

@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='tunex.png') }}">
+<title>TuneX | Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root {
+  --bg: radial-gradient(circle at top left, #1b2735, #090a0f);
+  --glass: rgba(255,255,255,0.08);
+  --border: rgba(255,255,255,0.12);
+  --text: #ffffff;
+  --muted: rgba(255,255,255,0.65);
+  --accent: #4fd1ff;
+  --danger: #ff6b6b;
+  --success: #10b981;
+  --radius-lg: 22px;
+  --radius-md: 14px;
+  --blur: blur(16px);
+  --transition: all 0.3s ease;
+}
+
+body.light {
+  --bg: linear-gradient(135deg, #f5f7fa, #e4ecf3);
+  --glass: rgba(255,255,255,0.9);
+  --border: rgba(0,0,0,0.08);
+  --text: #111;
+  --muted: rgba(0,0,0,0.6);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  min-height: 100vh;
+  font-family: "Inter", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* OVERLAY FOR MENU */
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 90;
+}
+
+#overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* HEADER */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 18px 36px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: var(--blur);
+  background: rgba(0,0,0,0.35);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+}
+
+.logo { font-size: 22px; font-weight: 700; }
+
+/* AVATAR + MENU WRAPPER */
+.avatar-wrapper {
+  position: relative;
+  z-index: 110;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #89f7fe);
+  color: #000;
+  display: grid;
+  place-items: center;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* USER MENU DROPDOWN */
+.menu {
+  position: absolute;
+  right: 0;
+  top: 56px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  min-width: 200px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+  transition: var(--transition);
+  z-index: 120;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+
+.menu.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.menu button, .menu a {
+  width: 100%;
+  padding: 14px 20px;
+  background: none;
+  border: none;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 15px;
+  display: block;
+  box-sizing: border-box;
+}
+
+.menu button:hover, .menu a:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 140px auto 80px;
+  padding: 0 24px;
+}
+
+/* STATS CARDS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: var(--glass);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  padding: 28px;
+  text-align: center;
+  backdrop-filter: var(--blur);
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.stat-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+}
+
+.stat-label {
+  font-size: 16px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.stat-value {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* SEARCH BAR */
+.search-container {
+  margin-bottom: 30px;
+}
+
+#adminSearch {
+  width: 100%;
+  padding: 16px 20px 16px 50px;
+  border-radius: 50px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 16px;
+  backdrop-filter: var(--blur);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 20px center;
+}
+
+#adminSearch::placeholder {
+  color: var(--muted);
+}
+
+/* USER SECTIONS */
+.user-section {
+  background: var(--glass);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.user-header {
+  padding: 20px 28px;
+  background: rgba(255,255,255,0.05);
+  font-size: 20px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.user-list {
+  max-height: 2000px;
+  transition: max-height 0.4s ease;
+}
+
+.user-row {
+  display: flex;
+  align-items: center;
+  padding: 18px 28px;
+  border-bottom: 1px solid var(--border);
+  transition: var(--transition);
+}
+
+.user-row:hover {
+  background: rgba(79,209,255,0.08);
+}
+
+.user-row:last-child {
+  border-bottom: none;
+}
+
+.user-details {
+  flex: 1;
+}
+
+.user-username {
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.user-email {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.user-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.block-btn {
+  padding: 10px 20px;
+  background: rgba(255,107,107,0.15);
+  color: var(--danger);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.block-btn:hover {
+  background: rgba(255,107,107,0.3);
+  transform: scale(1.05);
+}
+
+.block-btn.blocked {
+  background: rgba(16,185,129,0.15);
+  color: var(--success);
+}
+
+.block-btn.blocked:hover {
+  background: rgba(16,185,129,0.3);
+}
+
+/* GENRE SECTIONS (SONGS) */
+.genre-section {
+  background: var(--glass);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.genre-header {
+  padding: 20px 28px;
+  background: rgba(255,255,255,0.05);
+  font-size: 20px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.genre-songs {
+  max-height: 2000px;
+  transition: max-height 0.4s ease;
+}
+
+.song-row {
+  display: flex;
+  align-items: center;
+  padding: 18px 28px;
+  border-bottom: 1px solid var(--border);
+  transition: var(--transition);
+}
+
+.song-row:hover {
+  background: rgba(79,209,255,0.08);
+}
+
+.song-row.playing {
+  background: rgba(79,209,255,0.15);
+  border-left: 4px solid var(--accent);
+}
+
+.song-row:last-child {
+  border-bottom: none;
+}
+
+.song-play {
+  margin-right: 20px;
+  font-size: 28px;
+  cursor: pointer;
+  opacity: 0.8;
+  width: 40px;
+  text-align: center;
+}
+
+.song-play:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.song-details {
+  flex: 1;
+}
+
+.song-title {
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.song-artist {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.song-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.delete-btn {
+  padding: 10px 20px;
+  background: rgba(255,107,107,0.15);
+  color: var(--danger);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.delete-btn:hover {
+  background: rgba(255,107,107,0.3);
+  transform: scale(1.05);
+}
+
+/* MODAL WITH REASON */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-box {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  backdrop-filter: var(--blur);
+  border-radius: var(--radius-lg);
+  padding: 30px;
+  width: 380px;
+  text-align: center;
+}
+
+.modal-box h3 {
+  margin-bottom: 12px;
+  font-size: 20px;
+}
+
+.modal-box p {
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+.modal-box label {
+  display: block;
+  text-align: left;
+  margin: 16px 0 8px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.modal-box textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.12);
+  color: var(--text);
+  resize: none;
+  font-family: inherit;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.modal-actions button {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.cancel-btn {
+  background: rgba(255,255,255,0.15);
+  color: var(--text);
+}
+
+.confirm-btn {
+  background: var(--danger);
+  color: white;
+}
+</style>
+</head>
+
+<body>
+
+<!-- OVERLAY FOR MENU BLUR -->
+<div id="overlay" onclick="closeMenu()"></div>
+
+<header>
+  <div class="logo">TuneX</div>
+  <div class="avatar-wrapper">
+    <div class="avatar" onclick="toggleMenu()">
+      {{ user.username[0]|upper }}
+    </div>
+    <div class="menu" id="menu">
+      <button onclick="toggleTheme()">Toggle Theme</button>
+      <a href="/profile">Profile</a>
+      <a href="/logout">Logout</a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <h1 style="text-align:center; margin:40px 0;">Admin Dashboard</h1>
+
+  <!-- STATS CARDS - CLICK TO TOGGLE SECTIONS -->
+  <div class="stats-grid">
+    <div class="stat-card" onclick="showSection('normal-users')">
+      <div class="stat-label">Normal Users</div>
+      <div class="stat-value">{{ normal_users }}</div>
+    </div>
+    <div class="stat-card" onclick="showSection('creators')">
+      <div class="stat-label">Creators</div>
+      <div class="stat-value">{{ creators }}</div>
+    </div>
+    <div class="stat-card" onclick="showSection('songs')">
+      <div class="stat-label">Total Songs</div>
+      <div class="stat-value">{{ total_songs }}</div>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-container">
+    <input type="text" id="adminSearch" placeholder="Search users, creators, or songs...">
+  </div>
+
+  <!-- NORMAL USERS SECTION -->
+  <div class="user-section" id="normal-users" style="display:none;">
+    <div class="user-header">User</div>
+    <div class="user-list">
+      {% for user in normal_user_list %}
+      <div class="user-row" data-type="user" data-username="{{ user.username|lower }}" data-email="{{ user.email|lower }}">
+        <div class="user-details">
+          <div class="user-username">{{ user.username }}</div>
+          <div class="user-email">{{ user.email }}</div>
+        </div>
+        <div class="user-actions">
+          <button class="block-btn {% if user.is_blocked %}blocked{% endif %}" 
+                  onclick="toggleBlockUser({{ user.user_id }}, this)">
+            {% if user.is_blocked %}Unblock{% else %}Block{% endif %}
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- CREATORS SECTION -->
+  <div class="user-section" id="creators" style="display:none;">
+    <div class="user-header">Creator</div>
+    <div class="user-list">
+      {% for creator in creator_list %}
+      <div class="user-row" data-type="user" data-username="{{ creator.username|lower }}" data-email="{{ creator.email|lower }}">
+        <div class="user-details">
+          <div class="user-username">{{ creator.username }}</div>
+          <div class="user-email">{{ creator.email }}</div>
+        </div>
+        <div class="user-actions">
+          <button class="block-btn {% if creator.is_blocked %}blocked{% endif %}" 
+                  onclick="toggleBlockUser({{ creator.user_id }}, this)">
+            {% if creator.is_blocked %}Unblock{% else %}Block{% endif %}
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- SONGS SECTION -->
+  <div id="songs" style="display:none;">
+    {% for genre_name, songs in songs_by_genre.items() %}
+    <div class="genre-section">
+      <div class="genre-header">{{ genre_name }}</div>
+      <div class="genre-songs">
+        {% for song in songs %}
+        <div class="song-row" data-type="song" data-title="{{ song.title|lower }}" data-creator="{{ song.creator.username|lower }}">
+          <div class="song-play">▶</div>
+          <div class="song-details">
+            <div class="song-title">{{ song.title }}</div>
+            <div class="song-artist">by {{ song.creator.username }}</div>
+          </div>
+          <audio style="display:none;">
+            <source src="/{{ song.file_path }}" type="audio/mpeg">
+          </audio>
+          <div class="song-actions">
+            <button class="delete-btn" onclick="openDeleteModal({{ song.song_id }})">Delete</button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<!-- DELETE MODAL FOR SONGS -->
+<div class="modal" id="deleteModal">
+  <div class="modal-box">
+    <h3>Delete Song?</h3>
+    <p>This action cannot be undone.</p>
+    
+    <label>Reason for deletion <span style="color:var(--danger);">*</span></label>
+    <textarea id="deleteReason" placeholder="This reason will be sent to the creator" rows="4"></textarea>
+    
+    <div class="modal-actions">
+      <button class="cancel-btn" onclick="closeDeleteModal()">Cancel</button>
+      <button class="confirm-btn" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<form id="deleteForm" method="POST" style="display:none;">
+  <input type="hidden" name="reason" id="hiddenReason">
+</form>
+
+<script>
+let currentDeleteId = null;
+let currentAudio = null;
+let currentPlayBtn = null;
+let currentRow = null;
+let currentSection = null;
+
+function toggleMenu() {
+  document.getElementById("menu").classList.toggle("active");
+  document.getElementById("overlay").classList.toggle("active");
+}
+
+function closeMenu() {
+  document.getElementById("menu").classList.remove("active");
+  document.getElementById("overlay").classList.remove("active");
+}
+
+function toggleTheme() {
+  document.body.classList.toggle("light");
+  localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
+}
+
+(function () {
+  if (localStorage.getItem("theme") === "light") {
+    document.body.classList.add("light");
+  }
+})();
+
+/* CLICKABLE STATS CARDS - TOGGLE SECTIONS */
+function showSection(sectionId) {
+  // Toggle: if already open, close it
+  if (currentSection === sectionId) {
+    document.getElementById(sectionId).style.display = "none";
+    currentSection = null;
+  } else {
+    // Close previous section
+    if (currentSection) {
+      document.getElementById(currentSection).style.display = "none";
+    }
+    // Open new section
+    document.getElementById(sectionId).style.display = "block";
+    currentSection = sectionId;
+  }
+
+  // Clear search when switching sections
+  document.getElementById("adminSearch").value = "";
+}
+
+/* GLOBAL REAL-TIME SEARCH - SHOWS USERS, CREATORS & SONGS */
+document.getElementById("adminSearch").addEventListener("input", function () {
+  const query = this.value.trim().toLowerCase();
+
+  // Reset all sections to visible first
+  document.querySelectorAll('.user-section, #songs .genre-section').forEach(section => {
+    section.style.display = "block";
+  });
+  document.querySelectorAll('.user-row, .song-row').forEach(row => {
+    row.style.display = "flex";
+  });
+
+  if (query === "") {
+    // If search is empty, hide all sections again (back to tab view)
+    document.querySelectorAll('.user-section, #songs').forEach(section => {
+      section.style.display = "none";
+    });
+    currentSection = null;
+    return;
+  }
+
+  let hasResults = false;
+
+  // Search Normal Users
+  const normalUsers = document.querySelectorAll("#normal-users .user-row");
+  normalUsers.forEach(row => {
+    const username = (row.dataset.username || "");
+    const email = (row.dataset.email || "");
+    const matches = username.includes(query) || email.includes(query);
+    row.style.display = matches ? "flex" : "none";
+    if (matches) {
+      document.getElementById("normal-users").style.display = "block";
+      hasResults = true;
+    }
+  });
+
+  // Search Creators
+  const creators = document.querySelectorAll("#creators .user-row");
+  creators.forEach(row => {
+    const username = (row.dataset.username || "");
+    const email = (row.dataset.email || "");
+    const matches = username.includes(query) || email.includes(query);
+    row.style.display = matches ? "flex" : "none";
+    if (matches) {
+      document.getElementById("creators").style.display = "block";
+      hasResults = true;
+    }
+  });
+
+  // Search Songs (title + creator)
+  const songRows = document.querySelectorAll("#songs .song-row");
+  songRows.forEach(row => {
+    const title = (row.dataset.title || "");
+    const creator = (row.dataset.creator || "");
+    const matches = title.includes(query) || creator.includes(query);
+    row.style.display = matches ? "flex" : "none";
+    if (matches) hasResults = true;
+  });
+
+  // Show/hide genre sections based on visible songs
+  document.querySelectorAll("#songs .genre-section").forEach(section => {
+    const visibleSongs = section.querySelectorAll(".song-row[style*='flex']").length > 0;
+    section.style.display = visibleSongs ? "block" : "none";
+    if (visibleSongs) {
+      document.getElementById("songs").style.display = "block";
+      hasResults = true;
+    }
+  });
+});
+
+/* SINGLE PLAYBACK */
+const playButtons = document.querySelectorAll(".song-play");
+const audios = document.querySelectorAll("audio");
+
+playButtons.forEach((btn, index) => {
+  const audio = audios[index];
+  const row = btn.closest(".song-row");
+
+  btn.addEventListener("click", () => {
+    if (audio.paused) {
+      if (currentAudio && currentAudio !== audio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentPlayBtn.textContent = "▶";
+        currentRow.classList.remove("playing");
+      }
+      audio.play();
+      btn.textContent = "⏸";
+      row.classList.add("playing");
+      currentAudio = audio;
+      currentPlayBtn = btn;
+      currentRow = row;
+    } else {
+      audio.pause();
+      btn.textContent = "▶";
+      row.classList.remove("playing");
+      currentAudio = null;
+      currentPlayBtn = null;
+      currentRow = null;
+    }
+  });
+
+  audio.addEventListener("ended", () => {
+    btn.textContent = "▶";
+    row.classList.remove("playing");
+    if (currentAudio === audio) {
+      currentAudio = null;
+      currentPlayBtn = null;
+      currentRow = null;
+    }
+  });
+});
+
+function openDeleteModal(songId) {
+  currentDeleteId = songId;
+  document.getElementById("deleteReason").value = "";
+  document.getElementById("deleteModal").classList.add("active");
+}
+
+function closeDeleteModal() {
+  document.getElementById("deleteModal").classList.remove("active");
+  currentDeleteId = null;
+}
+
+function confirmDelete() {
+  const reason = document.getElementById("deleteReason").value.trim();
+  if (!reason) {
+    alert("Please enter a reason for deletion.");
+    return;
+  }
+
+  if (currentDeleteId) {
+    const form = document.getElementById("deleteForm");
+    document.getElementById("hiddenReason").value = reason;
+    form.action = `/admin/delete/song/${currentDeleteId}`;
+    form.submit();
+  }
+}
+
+function toggleBlockUser(userId, btn) {
+  const isBlocked = btn.classList.contains("blocked");
+  if (isBlocked) {
+    btn.classList.remove("blocked");
+    btn.textContent = "Block";
+    fetch(`/admin/unblock/user/${userId}`, { method: 'POST' });
+  } else {
+    btn.classList.add("blocked");
+    btn.textContent = "Unblock";
+    fetch(`/admin/block/user/${userId}`, { method: 'POST' });
+  }
+}
+</script>
+
+</body>
+</html>

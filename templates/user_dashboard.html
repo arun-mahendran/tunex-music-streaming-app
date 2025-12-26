@@ -36,6 +36,43 @@ body {
   color: var(--text);
 }
 
+/* BLOCKED USER OVERLAY */
+#blockedOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(12px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  flex-direction: column;
+  text-align: center;
+  padding: 20px;
+}
+
+#blockedOverlay.active {
+  display: flex;
+}
+
+#blockedOverlay h2 {
+  font-size: 32px;
+  margin-bottom: 16px;
+  color: white;
+}
+
+#blockedOverlay p {
+  font-size: 18px;
+  color: var(--muted);
+  max-width: 600px;
+}
+
+/* Disable interactions on songs when blocked */
+.blocked #songs-list {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
 /* OVERLAY */
 #overlay {
   position: fixed;
@@ -71,12 +108,93 @@ header {
   font-weight: 700;
 }
 
-/* AVATAR */
+/* AVATAR + NOTIFICATION WRAPPER */
 .avatar-wrapper {
   position: relative;
   z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
+/* NOTIFICATION BELL */
+.notif-bell {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.notif-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: var(--danger);
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  padding: 0 4px;
+}
+
+/* NOTIFICATION DROPDOWN */
+.notif-menu {
+  position: absolute;
+  right: 60px;
+  top: 54px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+  transition: var(--transition);
+  z-index: 120;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.notif-menu.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.notif-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  font-weight: bold;
+  font-size: 15px;
+}
+
+.notif-item {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.notif-item:last-child {
+  border-bottom: none;
+}
+
+.notif-time {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* AVATAR & MENU */
 .avatar {
   width: 42px;
   height: 42px;
@@ -120,6 +238,12 @@ header {
   color: var(--text);
   cursor: pointer;
   text-decoration: none;
+  display: block;
+}
+
+.menu a:hover,
+.menu button:hover {
+  background: rgba(255,255,255,0.1);
 }
 
 /* LAYOUT */
@@ -296,9 +420,13 @@ body.light .playlist-menu {
   background: rgba(79,209,255,0.2);
 }
 
-.track > strong {
+.track > div:first-child {
   flex: 1 1 200px;
   min-width: 180px;
+}
+
+.track > strong {
+  display: block;
   font-size: 1.1em;
 }
 
@@ -313,9 +441,9 @@ body.light .playlist-menu {
   align-items: center;
 }
 
-/* TRASH ICON FOR REMOVE - IMPROVED VISIBILITY */
+/* REMOVE BUTTON */
 .remove-btn {
-  font-size: 24px !important; /* Larger and bolder */
+  font-size: 24px !important;
   color: var(--danger) !important;
   background: none;
   border: none;
@@ -331,7 +459,7 @@ body.light .playlist-menu {
   transform: scale(1.1);
 }
 
-/* CURRENTLY PLAYING INDICATOR */
+/* PLAYING INDICATOR */
 .track.playing::before {
   content: "";
   position: absolute;
@@ -350,13 +478,34 @@ body.light .playlist-menu {
   align-items: center;
 }
 
-.add-to-playlist select,
-.add-to-playlist button {
-  padding: 6px 10px;
+.add-to-playlist select {
+  padding: 8px 10px;
   border-radius: 6px;
   border: 1px solid var(--border);
-  background: var(--glass);
+  background: rgba(255,255,255,0.15);
   color: var(--text);
+  min-width: 140px;
+  font-size: 14px;
+}
+
+.add-to-playlist select option {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.add-to-playlist button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent);
+  color: #000;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.add-to-playlist button:hover {
+  background: #89f7fe;
 }
 
 #no-results {
@@ -365,32 +514,64 @@ body.light .playlist-menu {
   color: var(--muted);
 }
 
-/* HIDDEN GENRE FOR SEARCH ONLY */
+/* HIDDEN GENRE */
 .genre {
   display: none;
 }
 </style>
 </head>
 
-<body>
+<body {% if is_blocked %}class="blocked"{% endif %}>
+<div id="overlay" onclick="closeMenus()"></div>
 
-<div id="overlay" onclick="closeMenu()"></div>
+<!-- BLOCKED OVERLAY -->
+<div id="blockedOverlay" {% if is_blocked %}class="active"{% endif %}>
+  <h2>🔒 Account Blocked</h2>
+  <p>You can't listen to songs until the admin unblocks your account.</p>
+</div>
 
 <header>
   <div class="logo">TuneX</div>
   <div class="avatar-wrapper">
+    <!-- NOTIFICATION BELL -->
+    <div class="notif-bell" onclick="toggleNotifMenu()">
+      🔔
+      {% set unread_count = notifications | selectattr('read', 'equalto', False) | list | length %}
+      {% if unread_count > 0 %}
+      <div class="notif-badge">{{ unread_count }}</div>
+      {% endif %}
+    </div>
+
+    <!-- AVATAR -->
     <div class="avatar" onclick="toggleMenu()">
       {{ username[0]|upper }}
     </div>
+
+    <!-- NOTIFICATION DROPDOWN -->
+    <div class="notif-menu" id="notifMenu">
+      <div class="notif-header">Notifications</div>
+      {% if notifications %}
+        {% for notif in notifications %}
+        <div class="notif-item">
+          {{ notif.message }}
+          <div class="notif-time" data-timestamp="{{ notif.timestamp.isoformat() }}"></div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="notif-item" style="color: var(--muted);">No notifications yet.</div>
+      {% endif %}
+    </div>
+
+    <!-- USER MENU -->
     <div class="menu" id="menu">
       <button onclick="toggleTheme()">Toggle Theme</button>
+      <a href="/profile">Profile</a>
       <a href="/logout">Logout</a>
     </div>
   </div>
 </header>
 
 <div class="layout">
-
   <div class="sidebar">
     <h3>Welcome, {{ username }} 👋</h3>
 
@@ -403,11 +584,9 @@ body.light .playlist-menu {
     {% for p in playlists %}
     <div class="nav-item {% if active_playlist and active_playlist.playlist_id == p.playlist_id %}active{% endif %}">
       <a href="/playlist/{{ p.playlist_id }}">{{ p.playlist_name }}</a>
-      <span class="playlist-actions"
-            onclick="event.stopPropagation(); togglePlaylistMenu({{ p.playlist_id }})">⋮</span>
+      <span class="playlist-actions" onclick="event.stopPropagation(); togglePlaylistMenu({{ p.playlist_id }})">⋮</span>
 
-      <div class="playlist-menu" id="menu-{{ p.playlist_id }}"
-           onclick="event.stopPropagation()">
+      <div class="playlist-menu" id="menu-{{ p.playlist_id }}" onclick="event.stopPropagation()">
         <form action="/playlist/rename/{{ p.playlist_id }}" method="POST">
           <input name="name" placeholder="Rename playlist" required>
           <button type="submit">Rename</button>
@@ -436,7 +615,6 @@ body.light .playlist-menu {
       {% endif %}
     </h1>
 
-    <!-- SEARCH + SORT -->
     <div class="search-header">
       <input type="text" id="search" placeholder="Search songs by title or genre...">
       {% if active_playlist %}
@@ -447,35 +625,38 @@ body.light .playlist-menu {
     <div id="songs-list">
       {% for song in songs %}
       <div class="track" draggable="true" data-song-id="{{ song.song_id }}">
-        <strong>{{ song.title }}</strong>
+        <div>
+          <strong>{{ song.title }}</strong>
+          <div style="font-size: 0.9em; color: var(--muted); margin-top: 4px;">
+            {{ song.creator.username }}
+          </div>
+        </div>
         <span class="genre">{{ song.genre.genre_name }}</span>
 
-        <audio controls>
+        <audio controls {% if is_blocked %}disabled{% endif %}>
           <source src="/{{ song.file_path }}">
         </audio>
 
-        <!-- Only show Add button if viewing All Songs -->
         {% if not active_playlist %}
         <div class="add-to-playlist">
           <form action="/playlist/add" method="POST">
             <input type="hidden" name="song_id" value="{{ song.song_id }}">
-            <select name="playlist_id" required>
+            <select name="playlist_id" required {% if is_blocked %}disabled{% endif %}>
               {% for p in playlists %}
               <option value="{{ p.playlist_id }}">{{ p.playlist_name }}</option>
               {% endfor %}
             </select>
-            <button type="submit">Add</button>
+            <button type="submit" {% if is_blocked %}disabled{% endif %}>Add</button>
           </form>
         </div>
         {% endif %}
 
-        <!-- Trash icon to remove from playlist - NOW VERY CLEAR -->
         {% if active_playlist %}
         <div class="actions">
           <form action="/playlist/remove" method="POST" style="display:inline;">
             <input type="hidden" name="playlist_id" value="{{ active_playlist.playlist_id }}">
             <input type="hidden" name="song_id" value="{{ song.song_id }}">
-            <button type="submit" class="remove-btn" title="Remove from playlist">🗑</button>
+            <button type="submit" class="remove-btn" title="Remove from playlist" {% if is_blocked %}disabled{% endif %}>🗑</button>
           </form>
         </div>
         {% endif %}
@@ -485,17 +666,61 @@ body.light .playlist-menu {
 
     <div id="no-results" style="display: none;">No such songs found</div>
   </div>
-
 </div>
 
 <script>
+function formatRelativeTime(dateStr) {
+  const date = new Date(dateStr + 'Z');
+  const now = new Date();
+  const diffMs = now - date;
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffSeconds < 60) return "just now";
+  if (diffMinutes < 60) return diffMinutes + " minute" + (diffMinutes === 1 ? "" : "s") + " ago";
+  if (diffHours < 24) return diffHours + " hour" + (diffHours === 1 ? "" : "s") + " ago";
+  if (diffDays < 30) return diffDays + " day" + (diffDays === 1 ? "" : "s") + " ago";
+
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + 
+         " at " + 
+         date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+document.querySelectorAll('.notif-time[data-timestamp]').forEach(el => {
+  el.textContent = formatRelativeTime(el.dataset.timestamp);
+});
+
+function toggleNotifMenu() {
+  const notifMenu = document.getElementById("notifMenu");
+  notifMenu.classList.toggle("active");
+  document.getElementById("menu").classList.remove("active");
+  document.getElementById("overlay").classList.toggle("active");
+
+  if (notifMenu.classList.contains("active")) {
+    localStorage.setItem("lastSeenUserNotificationCount", {{ notifications|length }});
+    const badge = document.querySelector(".notif-badge");
+    if (badge) badge.style.display = "none";
+  }
+}
+
+const lastSeen = parseInt(localStorage.getItem("lastSeenUserNotificationCount") || "0");
+const currentCount = {{ notifications|length }};
+if (lastSeen >= currentCount) {
+  const badge = document.querySelector(".notif-badge");
+  if (badge) badge.style.display = "none";
+}
+
 function toggleMenu() {
   document.getElementById("menu").classList.toggle("active");
+  document.getElementById("notifMenu").classList.remove("active");
   document.getElementById("overlay").classList.toggle("active");
 }
 
-function closeMenu() {
+function closeMenus() {
   document.getElementById("menu").classList.remove("active");
+  document.getElementById("notifMenu").classList.remove("active");
   document.getElementById("overlay").classList.remove("active");
 }
 
@@ -520,6 +745,7 @@ document.addEventListener("click", () => {
 });
 
 /* CURRENTLY PLAYING */
+{% if not is_blocked %}
 const audios = document.querySelectorAll("audio");
 audios.forEach(currentAudio => {
   currentAudio.addEventListener("play", () => {
@@ -536,6 +762,17 @@ audios.forEach(currentAudio => {
     currentAudio.closest(".track").classList.remove("playing");
   });
 });
+{% endif %}
+
+/* BLOCKED USER: ALERT ON CLICK */
+{% if is_blocked %}
+document.querySelectorAll('.track, audio').forEach(el => {
+  el.addEventListener('click', e => {
+    e.preventDefault();
+    alert("You cannot listen to songs until the admin unblocks you.");
+  });
+});
+{% endif %}
 
 /* SEARCH */
 const searchInput = document.getElementById("search");
@@ -556,7 +793,7 @@ searchInput.addEventListener("input", () => {
   document.getElementById("no-results").style.display = hasResults ? "none" : "block";
 });
 
-/* SORT FUNCTIONALITY (only in playlist view) */
+/* SORT (only in playlist) */
 let isSortedAlphabetically = false;
 
 function toggleSort() {
@@ -574,23 +811,21 @@ function toggleSort() {
       return titleA.localeCompare(titleB);
     });
   } else {
-    // Restore original order
     trackArray.sort((a, b) => {
       return a.dataset.originalIndex - b.dataset.originalIndex;
     });
   }
 
-  // Re-append in new order
   trackArray.forEach(track => container.appendChild(track));
 }
 
-/* Preserve original order for sorting back */
+/* Preserve original order */
 document.querySelectorAll("#songs-list .track").forEach((track, index) => {
   track.dataset.originalIndex = index;
 });
 
-/* DRAG & DROP REORDERING (only in playlist view) */
-{% if active_playlist %}
+/* DRAG & DROP REORDERING (only in playlist and if not blocked) */
+{% if active_playlist and not is_blocked %}
 let draggedTrack = null;
 
 tracks.forEach(track => {

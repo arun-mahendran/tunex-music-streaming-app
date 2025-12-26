@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='tunex.png') }}">
+<title>TuneX | Creator Analytics</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+:root {
+  --bg: radial-gradient(circle at top left, #1b2735, #090a0f);
+  --glass: rgba(255,255,255,0.08);
+  --border: rgba(255,255,255,0.12);
+  --text: #ffffff;
+  --muted: rgba(255,255,255,0.65);
+  --accent: #4fd1ff;
+  --danger: #ff6b6b;
+  --success: #10b981;
+  --radius-lg: 22px;
+  --radius-md: 14px;
+  --blur: blur(16px);
+  --transition: all 0.3s ease;
+}
+body.light {
+  --bg: linear-gradient(135deg, #f5f7fa, #e4ecf3);
+  --glass: rgba(255,255,255,0.9);
+  --border: rgba(0,0,0,0.08);
+  --text: #111;
+  --muted: rgba(0,0,0,0.6);
+}
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 90;
+}
+#overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  padding: 18px 36px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: var(--blur);
+  background: rgba(0,0,0,0.35);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+}
+.logo { font-size: 22px; font-weight: 700; }
+.avatar-wrapper {
+  position: relative;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+/* DASHBOARD & ANALYTICS BUTTONS - EXACT SAME STYLE */
+.nav-btn {
+  padding: 10px 18px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  transition: var(--transition);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.nav-btn:hover {
+  background: var(--accent);
+  color: #000;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(79,209,255,0.5);
+}
+/* ANALYTICS BUTTON (ACTIVE) - SAME BASE STYLE + ACTIVE STATE */
+.analytics-btn {
+  padding: 10px 18px;
+  background: var(--accent);
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #000;
+  cursor: default;
+  pointer-events: none;
+  box-shadow: 0 6px 16px rgba(79,209,255,0.4);
+}
+/* NOTIFICATION BELL */
+.notif-bell {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 20px;
+  transition: var(--transition);
+}
+.notif-bell:hover {
+  background: rgba(79,209,255,0.2);
+  transform: scale(1.05);
+}
+.notif-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: var(--danger);
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  padding: 0 4px;
+}
+/* NOTIFICATION DROPDOWN */
+.notif-menu {
+  position: absolute;
+  right: 60px;
+  top: 56px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+  transition: var(--transition);
+  z-index: 120;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.notif-menu.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.notif-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  font-weight: bold;
+  font-size: 15px;
+}
+.notif-item {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+.notif-item:last-child {
+  border-bottom: none;
+}
+.notif-time {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+/* AVATAR & MENU */
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #89f7fe);
+  color: #000;
+  display: grid;
+  place-items: center;
+  font-weight: bold;
+  cursor: pointer;
+}
+.menu {
+  position: absolute;
+  right: 0;
+  top: 56px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  min-width: 180px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+  transition: var(--transition);
+  z-index: 120;
+}
+.menu.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.menu button, .menu a {
+  width: 100%;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 15px;
+  display: block;
+}
+.menu a:hover, .menu button:hover {
+  background: rgba(255,255,255,0.12);
+}
+/* PERFECT CENTERING - NO SCROLL */
+main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.analytics-card {
+  background: var(--glass);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  padding: 50px 40px;
+  backdrop-filter: var(--blur);
+  text-align: center;
+  width: 100%;
+  max-width: 800px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  margin-top: 40px;
+}
+.stat-card {
+  padding: 40px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.08);
+  transition: var(--transition);
+}
+.stat-card:hover {
+  transform: translateY(-6px);
+  background: rgba(255,255,255,0.12);
+}
+.stat-number {
+  font-size: 60px;
+  font-weight: 800;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+.stat-label {
+  font-size: 18px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.top-song-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--success);
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  word-break: break-word;
+  padding: 0 20px;
+}
+.top-song-title:empty::before {
+  content: "No plays yet — share your music!";
+  color: var(--muted);
+  font-style: italic;
+  font-size: 22px;
+}
+</style>
+</head>
+<body>
+<div id="overlay" onclick="closeMenus()"></div>
+
+<header>
+  <div class="logo">TuneX</div>
+  <div class="avatar-wrapper">
+    <!-- DASHBOARD BUTTON -->
+    <a href="/dashboard/creator" class="nav-btn">Dashboard</a>
+
+    <!-- ANALYTICS BUTTON (ACTIVE - SAME STYLE AS DASHBOARD) -->
+    <div class="nav-btn analytics-btn">Analytics</div>
+
+    <!-- NOTIFICATION BELL -->
+    <div class="notif-bell" onclick="toggleNotifMenu()">
+      🔔
+      <div class="notif-badge" id="notifBadge">
+        {{ notifications|length }}
+      </div>
+    </div>
+
+    <!-- AVATAR -->
+    <div class="avatar" onclick="toggleMenu()">
+      {{ username[0]|upper }}
+    </div>
+
+    <!-- NOTIFICATION DROPDOWN -->
+    <div class="notif-menu" id="notifMenu">
+      <div class="notif-header">Notifications</div>
+      {% if notifications %}
+        {% for notif in notifications %}
+        <div class="notif-item">
+          {{ notif.message }}
+          <div class="notif-time" data-timestamp="{{ notif.timestamp.isoformat() }}"></div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="notif-item" style="color: var(--muted);">No notifications yet.</div>
+      {% endif %}
+    </div>
+
+    <!-- USER MENU -->
+    <div class="menu" id="menu">
+      <button onclick="toggleTheme()">Toggle Theme</button>
+      <a href="/profile">Profile</a>
+      <a href="/logout">Logout</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="analytics-card">
+    <h1 style="font-size: 36px; margin: 0 0 10px 0;">📊 Creator Analytics</h1>
+    <p style="color: var(--muted); margin-bottom: 40px;">Track your music performance</p>
+
+    <div class="analytics-grid">
+      <div class="stat-card">
+        <div class="stat-number">{{ total_songs }}</div>
+        <div class="stat-label">Total Songs Uploaded</div>
+      </div>
+      <div class="stat-card">
+        <div class="top-song-title">
+          {% if top_song %}
+            {{ top_song.title }}
+          {% else %}
+            No plays yet — share your music!
+          {% endif %}
+        </div>
+        <div class="stat-label">Most Played Song</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+let currentCount = {{ notifications|length }};
+
+// Hide badge if already read
+const notifBadge = document.getElementById("notifBadge");
+const lastSeenCount = parseInt(localStorage.getItem("lastSeenNotificationCount") || "0");
+if (lastSeenCount >= currentCount && notifBadge) {
+  notifBadge.style.display = "none";
+}
+
+function toggleMenu() {
+  document.getElementById("menu").classList.toggle("active");
+  document.getElementById("notifMenu").classList.remove("active");
+  document.getElementById("overlay").classList.toggle("active");
+}
+
+function toggleNotifMenu() {
+  const notifMenu = document.getElementById("notifMenu");
+  notifMenu.classList.toggle("active");
+  document.getElementById("menu").classList.remove("active");
+  document.getElementById("overlay").classList.toggle("active");
+
+  if (notifMenu.classList.contains("active")) {
+    localStorage.setItem("lastSeenNotificationCount", currentCount);
+    if (notifBadge) notifBadge.style.display = "none";
+  }
+}
+
+function closeMenus() {
+  document.getElementById("menu").classList.remove("active");
+  document.getElementById("notifMenu").classList.remove("active");
+  document.getElementById("overlay").classList.remove("active");
+}
+
+function toggleTheme() {
+  const isLight = document.body.classList.toggle("light");
+  localStorage.setItem("theme", isLight ? "light" : "dark");
+}
+
+(function () {
+  if (localStorage.getItem("theme") === "light") {
+    document.body.classList.add("light");
+  }
+
+  document.querySelectorAll('.notif-time[data-timestamp]').forEach(el => {
+    const date = new Date(el.dataset.timestamp + 'Z');
+    el.textContent = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  });
+})();
+</script>
+</body>
+</html>

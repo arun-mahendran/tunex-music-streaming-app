@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/png" href="{{ url_for('static', filename='tunex.png') }}">
 <title>TuneX | Register</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -43,7 +42,7 @@
         text-decoration: none;
     }
 
-    input, button {
+    input, button, select {
         width: 100%;
         padding: 12px;
         margin: 12px 0;
@@ -85,10 +84,14 @@
     <!-- BACK ARROW -->
     <a class="back" onclick="goBack()">←</a>
 
-    <h2 id="title">Register</h2>
+    <h2>Register</h2>
 
     <form method="POST">
-        <input type="hidden" name="role" id="role">
+        <select name="role" required>
+            <option value="">Select Role</option>
+            <option value="USER">Listener</option>
+            <option value="CREATOR">Creator</option>
+        </select>
         <input type="text" name="username" placeholder="Username" required>
         <input type="email" name="email" placeholder="Email" required>
         <input type="password" name="password" placeholder="Password" required>
@@ -97,7 +100,7 @@
 
     <p>
         Already have an account?
-        <a id="loginLink" href="#">Login</a>
+        <a href="/login">Login</a>
     </p>
 </div>
 
@@ -109,11 +112,6 @@
             window.location.href = "/";
         }
     }
-
-    const role = new URLSearchParams(window.location.search).get("role") || "USER";
-    document.getElementById("role").value = role;
-    document.getElementById("title").innerText = role + " Registration";
-    document.getElementById("loginLink").href = "/login?role=" + role;
 </script>
 
 </body>

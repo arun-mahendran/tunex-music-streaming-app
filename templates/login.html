@@ -104,7 +104,7 @@
 <div class="box">
     <a class="back" onclick="goBack()">←</a>
 
-    <h2 id="title">Login</h2>
+    <h2>Login</h2>
 
     <!-- NEW: ERROR ALERT -->
     {% with messages = get_flashed_messages() %}
@@ -116,7 +116,6 @@
     {% endwith %}
 
     <form method="POST">
-        <input type="hidden" name="role" id="role">
         <input type="email" name="email" placeholder="Email" required>
         <input type="password" name="password" placeholder="Password" required>
         <button type="submit">Login</button>
@@ -124,7 +123,7 @@
 
     <p>
         New here?
-        <a id="registerLink" href="#">Register</a>
+        <a href="/register">Register</a>
     </p>
 </div>
 
@@ -136,11 +135,6 @@
             window.location.href = "/";
         }
     }
-
-    const role = new URLSearchParams(window.location.search).get("role") || "USER";
-    document.getElementById("role").value = role;
-    document.getElementById("title").innerText = role + " Login";
-    document.getElementById("registerLink").href = "/register?role=" + role;
 </script>
 
 </body>

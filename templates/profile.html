@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='tunex.png') }}">
+<title>TuneX | Profile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+:root {
+  --bg: radial-gradient(circle at top, #1b2735, #090a0f);
+  --glass: rgba(255,255,255,0.08);
+  --border: rgba(255,255,255,0.12);
+  --text: #ffffff;
+  --muted: rgba(255,255,255,0.65);
+  --accent: #4fd1ff;
+  --danger: #ff6b6b;
+  --success: #10b981;
+  --radius: 18px;
+  --blur: blur(14px);
+  --transition: all 0.3s ease;
+}
+body.light {
+  --bg: linear-gradient(135deg, #f5f7fa, #e4ecf3);
+  --glass: rgba(255,255,255,0.95);
+  --border: rgba(0,0,0,0.08);
+  --text: #111;
+  --muted: rgba(0,0,0,0.6);
+}
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: var(--transition);
+  z-index: 15;
+}
+#overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 18px 36px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: var(--blur);
+  background: rgba(0,0,0,0.35);
+  border-bottom: 1px solid var(--border);
+}
+.logo { font-size: 22px; font-weight: 700; }
+.avatar-wrapper {
+  position: relative;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #89f7fe);
+  color: #000;
+  display: grid;
+  place-items: center;
+  font-weight: bold;
+  cursor: pointer;
+}
+.menu {
+  position: absolute;
+  right: 0;
+  top: 54px;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  min-width: 180px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+  transition: var(--transition);
+  z-index: 120;
+}
+.menu.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.menu button, .menu a {
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+}
+.menu a:hover, .menu button:hover {
+  background: rgba(255,255,255,0.1);
+}
+main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.profile-card {
+  background: var(--glass);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 32px;
+  backdrop-filter: var(--blur);
+  text-align: center;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+.avatar-large {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #89f7fe);
+  color: #000;
+  display: grid;
+  place-items: center;
+  font-size: 40px;
+  font-weight: bold;
+  margin: 0 auto 20px;
+}
+.info h2 {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+.info p {
+  color: var(--muted);
+  font-size: 16px;
+  margin-bottom: 32px;
+}
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.actions a {
+  display: block;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transition);
+  background: linear-gradient(135deg, var(--accent), #89f7fe);
+  color: #000;
+  text-align: center;
+}
+.actions a:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(79,209,255,0.3);
+}
+.back-btn {
+  margin-top: 32px;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.1);
+  color: var(--text);
+  font-size: 15px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.back-btn:hover {
+  background: rgba(255,255,255,0.2);
+  transform: translateY(-2px);
+  color: var(--accent);
+}
+</style>
+</head>
+<body>
+<div id="overlay" onclick="closeMenus()"></div>
+
+<header>
+  <div class="logo">TuneX</div>
+  <div class="avatar-wrapper">
+    <div class="avatar" onclick="toggleMenu()">
+      {{ user.username[0]|upper }}
+    </div>
+    <div class="menu" id="menu">
+      <button onclick="toggleTheme()">Toggle Theme</button>
+      <a href="/profile">Profile</a>
+      <a href="/logout">Logout</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="profile-card">
+    <div class="avatar-large">{{ user.username[0]|upper }}</div>
+    <div class="info">
+      <h2>{{ user.username }}</h2>
+      <p>{{ user.email }}</p>
+    </div>
+    <div class="actions">
+      <a href="/profile/edit">Edit Profile</a>
+      <a href="/profile/change-password">Change Password</a>
+    </div>
+
+    <!-- DYNAMIC BACK BUTTON - SUPPORTS ADMIN, CREATOR & USER -->
+    {% set roles = user.roles|map(attribute='role_name')|list %}
+    {% if 'CREATOR' in roles %}
+      <div class="back-btn" onclick="window.location.href='/dashboard/creator'">← Back to Creator Studio</div>
+    {% elif 'ADMIN' in roles %}
+      <div class="back-btn" onclick="window.location.href='/dashboard/admin'">← Back to Admin Dashboard</div>
+    {% else %}
+      <div class="back-btn" onclick="window.location.href='/dashboard/user'">← Back to Dashboard</div>
+    {% endif %}
+  </div>
+</main>
+
+<script>
+function toggleMenu() {
+  document.getElementById("menu").classList.toggle("active");
+  document.getElementById("overlay").classList.toggle("active");
+}
+function closeMenus() {
+  document.getElementById("menu").classList.remove("active");
+  document.getElementById("overlay").classList.remove("active");
+}
+function toggleTheme() {
+  const isLight = document.body.classList.toggle("light");
+  localStorage.setItem("theme", isLight ? "light" : "dark");
+}
+(function () {
+  if (localStorage.getItem("theme") === "light") document.body.classList.add("light");
+})();
+</script>
+</body>
+</html>

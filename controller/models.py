@@ -54,6 +54,7 @@ class Song(db.Model):
     play_count = db.Column(db.Integer, default=0)
     creator_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
     genre_id = db.Column(db.Integer, db.ForeignKey('genres.genre_id'), nullable=False)
+    lyrics = db.Column(db.Text, nullable=True)
 
     genre = db.relationship('Genre', backref=db.backref('songs', lazy=True))
     creator = db.relationship('User', backref=db.backref('uploaded_songs', lazy=True))

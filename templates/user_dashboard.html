@@ -555,6 +555,73 @@ body.light .playlist-menu {
   margin-top: 4px;
   font-weight: 500;
 }
+
+/* LYRICS DISPLAY */
+.lyrics-container {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  max-height: 280px;
+  overflow-y: hidden; /* changed from auto to hidden during transition */
+  opacity: 0;
+  height: 0;
+  padding: 0;
+  margin-top: 0;
+  border: none;
+  transition: all 0.4s ease, opacity 0.5s ease;
+  scrollbar-width: none; /* hide scrollbar when collapsed */
+}
+
+.lyrics-container::-webkit-scrollbar {
+  display: none;
+}
+
+.lyrics-container.visible {
+  opacity: 1;
+  height: auto;
+  max-height: 280px;
+  padding: 16px;
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) transparent;
+}
+
+.lyrics-container.visible::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lyrics-container.visible::-webkit-scrollbar-thumb {
+  background: rgba(79,209,255,0.4);
+  border-radius: 3px;
+}
+
+.lyrics-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lyrics-line {
+  padding: 10px 14px;
+  margin: 0;
+  border-radius: 8px;
+  transition: all 0.4s ease;
+  font-size: 1em;
+  line-height: 1.6;
+}
+
+.lyrics-line.current {
+  background: rgba(79,209,255,0.35);
+  color: var(--accent);
+  font-weight: bold;
+  border-left: 5px solid var(--accent);
+  transform: translateX(6px);
+  box-shadow: 0 4px 20px rgba(79,209,255,0.3);
+}
 </style>
 </head>
 
@@ -570,12 +637,10 @@ body.light .playlist-menu {
 <header>
   <div class="logo">TuneX</div>
   <div class="avatar-wrapper">
-    <!-- CREATOR STUDIO BUTTON - ONLY FOR CREATORS -->
     {% if 'CREATOR' in session.get('roles', []) %}
     <a href="/dashboard/creator" class="creator-switch-btn">Creator Studio</a>
     {% endif %}
 
-    <!-- NOTIFICATION BELL -->
     <div class="notif-bell" onclick="toggleNotifMenu()">
       🔔
       {% set unread_count = notifications | length %}
@@ -585,11 +650,10 @@ body.light .playlist-menu {
     </div>
 
     <!-- AVATAR -->
-    <div class="avatar" onclick="toggleMenu()">
+<div class="avatar" onclick="toggleMenu()">
       {{ username[0]|upper }}
     </div>
 
-    <!-- NOTIFICATION DROPDOWN -->
     <div class="notif-menu" id="notifMenu">
       <div class="notif-header">Notifications</div>
       {% if notifications %}
@@ -604,7 +668,6 @@ body.light .playlist-menu {
       {% endif %}
     </div>
 
-    <!-- USER MENU -->
     <div class="menu" id="menu">
       <button onclick="toggleTheme()">Toggle Theme</button>
       <a href="/profile">Profile</a>
@@ -673,9 +736,14 @@ body.light .playlist-menu {
         </div>
         <span class="genre">{{ song.genre.genre_name }}</span>
 
-        <audio controls {% if is_blocked %}disabled{% endif %}>
+        <audio controls {% if is_blocked %}disabled{% endif %} data-song-id="{{ song.song_id }}">
           <source src="/{{ song.file_path }}">
         </audio>
+
+        <!-- ANIMATED LYRICS -->
+        <div class="lyrics-container" id="lyrics-{{ song.song_id }}">
+          <div class="lyrics-lines" id="lines-{{ song.song_id }}"></div>
+        </div>
 
         {% if not active_playlist %}
         <div class="add-to-playlist">
@@ -785,22 +853,110 @@ document.addEventListener("click", () => {
   document.querySelectorAll(".playlist-menu").forEach(m => m.classList.remove("active"));
 });
 
-/* CURRENTLY PLAYING */
+/* CURRENTLY PLAYING + LYRICS COLLAPSE ON PAUSE + SWITCH SONGS */
 {% if not is_blocked %}
 const audios = document.querySelectorAll("audio");
-audios.forEach(currentAudio => {
-  currentAudio.addEventListener("play", () => {
-    audios.forEach(otherAudio => {
-      if (otherAudio !== currentAudio) {
-        otherAudio.pause();
-        otherAudio.currentTime = 0;
-        otherAudio.closest(".track")?.classList.remove("playing");
+audios.forEach(audio => {
+  const songId = audio.dataset.songId;
+  const lyricsContainer = document.getElementById(`lyrics-${songId}`);
+  const linesContainer = document.getElementById(`lines-${songId}`);
+
+  let autoScroll = true;
+  let scrollTimeout = null;
+
+  // Detect manual scroll → pause auto-scroll temporarily
+  lyricsContainer.addEventListener("scroll", () => {
+    autoScroll = false;
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => autoScroll = true, 3000);
+  });
+
+  lyricsContainer.addEventListener("touchmove", () => {
+    autoScroll = false;
+    clearTimeout(scrollTimeout);
+  });
+
+  audio.addEventListener("play", () => {
+    // Pause all other songs and collapse their lyrics
+    audios.forEach(other => {
+      if (other !== audio) {
+        other.pause();
+        other.currentTime = 0;
+        other.closest(".track")?.classList.remove("playing");
+        const otherLyrics = document.getElementById(`lyrics-${other.dataset.songId}`);
+        if (otherLyrics) otherLyrics.classList.remove("visible");
       }
     });
-    currentAudio.closest(".track").classList.add("playing");
+
+    // Show playing state
+    audio.closest(".track").classList.add("playing");
+
+    // EXPAND lyrics container
+    lyricsContainer.classList.add("visible");
+
+    // Load lyrics once
+    if (linesContainer.children.length === 0) {
+      const loading = document.createElement("div");
+      loading.className = "lyrics-line";
+      loading.textContent = "Loading lyrics...";
+      linesContainer.appendChild(loading);
+
+      fetch(`/api/song/${songId}/lyrics`)
+        .then(res => res.json())
+        .then(data => {
+          linesContainer.innerHTML = "";
+          const lyrics = data.lyrics || "No lyrics available.";
+          const lines = lyrics.split('\n').filter(line => line.trim() !== "");
+
+          if (lines.length === 0) {
+            const noLyrics = document.createElement("div");
+            noLyrics.className = "lyrics-line";
+            noLyrics.textContent = "♪ Instrumental ♪";
+            linesContainer.appendChild(noLyrics);
+          } else {
+            lines.forEach(lineText => {
+              const line = document.createElement("div");
+              line.className = "lyrics-line";
+              line.textContent = lineText.trim() || " ";
+              linesContainer.appendChild(line);
+            });
+          }
+        })
+        .catch(() => {
+          linesContainer.innerHTML = '<div class="lyrics-line">Failed to load lyrics.</div>';
+        });
+    }
   });
-  currentAudio.addEventListener("ended", () => {
-    currentAudio.closest(".track").classList.remove("playing");
+
+  // COLLAPSE lyrics when paused
+  audio.addEventListener("pause", () => {
+    lyricsContainer.classList.remove("visible");
+  });
+
+  // Sync current line + auto-scroll while playing
+  audio.addEventListener("timeupdate", () => {
+    if (linesContainer.children.length <= 1) return;
+
+    const duration = audio.duration || 1;
+    const progress = audio.currentTime / duration;
+    const lineCount = linesContainer.children.length;
+    const currentIndex = Math.min(Math.floor(progress * lineCount), lineCount - 1);
+
+    Array.from(linesContainer.children).forEach((line, i) => {
+      line.classList.toggle("current", i === currentIndex);
+    });
+
+    if (!audio.paused && autoScroll) {
+      const currentLine = linesContainer.children[currentIndex];
+      if (currentLine) {
+        currentLine.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  });
+
+  audio.addEventListener("ended", () => {
+    audio.closest(".track").classList.remove("playing");
+    lyricsContainer.classList.remove("visible");
   });
 });
 {% endif %}

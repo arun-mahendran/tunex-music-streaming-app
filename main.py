@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
@@ -16,10 +16,20 @@ from controller.models import (
 )
 from sqlalchemy.orm import joinedload
 
+import google.generativeai as genai  # Gemini AI
+
 # ================= APP SETUP =================
 app = Flask(__name__)
 app.config.from_object(Config)
 db.init_app(app)
+
+# Gemini Setup
+genai.configure(api_key=app.config['GEMINI_API_KEY'])
+
+# Use stable fast model (supports audio transcription)
+model = genai.GenerativeModel('gemini-2.5-flash')
+
+print("Gemini model loaded: gemini-2.5-flash")
 
 UPLOAD_FOLDER = "static/uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -605,6 +615,46 @@ def change_password():
     return render_template("change_password.html", user=user)
 
 
+# ================= GEMINI LYRICS TRANSCRIPTION =================
+@app.route('/api/song/<int:song_id>/lyrics')
+def get_lyrics(song_id):
+    song = Song.query.get_or_404(song_id)
+
+    # Return cached lyrics if available
+    if song.lyrics:
+        return jsonify({"lyrics": song.lyrics})
+
+    try:
+        uploaded_file = genai.upload_file(path=song.file_path)
+
+        response = model.generate_content([
+            uploaded_file,
+            "Transcribe only the sung lyrics from this audio. "
+            "Return clean lyrics with proper line breaks (\\n). "
+            "Do not add timestamps, explanations, or extra text."
+        ])
+
+        lyrics = response.text.strip()
+
+        # Clean common Gemini artifacts
+        if lyrics.startswith("```"):
+            lyrics = lyrics.split("```", 1)[1].rsplit("```", 1)[0].strip()
+
+        if not lyrics or lyrics.lower() in ["no lyrics", "instrumental", ""]:
+            lyrics = "♪ Instrumental ♪\n(No lyrics detected)"
+
+        song.lyrics = lyrics
+        db.session.commit()
+
+        genai.delete_file(uploaded_file.name)
+
+        return jsonify({"lyrics": lyrics})
+
+    except Exception as e:
+        print(f"Gemini Error: {e}")
+        return jsonify({"lyrics": "Unable to transcribe lyrics at this time."}), 500
+
+
 # ================= PLAY COUNT API =================
 @app.route('/api/song/<int:song_id>/play', methods=['POST'])
 def increment_play(song_id):
@@ -621,6 +671,54 @@ def increment_play(song_id):
 
     return '', 204
 
+
+@app.route('/api/songs')
+def api_get_songs():
+    # Get all songs with creator and genre info
+    songs = Song.query.options(
+        joinedload(Song.creator),
+        joinedload(Song.genre)
+    ).all()
+
+    song_list = []
+    for song in songs:
+        song_list.append({
+            "song_id": song.song_id,
+            "title": song.title,
+            "artist": song.creator.username if song.creator else "Unknown",
+            "genre": song.genre.genre_name if song.genre else "Unknown",
+            "duration": song.duration,
+            "play_count": song.play_count,
+            "file_path": url_for('static', filename=song.file_path.replace('static/', ''), _external=False)
+        })
+
+    return jsonify({
+        "songs": song_list,
+        "total": len(song_list)
+    })
+
+
+@app.route('/api/users')
+def api_get_users():
+    if 'ADMIN' not in session.get('roles', []):
+        return jsonify({"error": "Admin access required"}), 403
+
+    users = User.query.all()
+
+    user_list = []
+    for user in users:
+        user_list.append({
+            "user_id": user.user_id,
+            "username": user.username,
+            "email": user.email,
+            "is_blocked": user.is_blocked,
+            "roles": [role.role_name for role in user.roles]
+        })
+
+    return jsonify({
+        "users": user_list,
+        "total": len(user_list)
+    })
 
 # ================= RUN =================
 if __name__ == "__main__":

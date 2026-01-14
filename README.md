@@ -110,7 +110,7 @@ git clone https://github.com/arun-mahendran/tunex-music-streaming-app.git
 cd tunex
 ```
 
-### 2️⃣ Create a virtual environment
+### 2️⃣ Create and activate a virtual environment
 
 **Windows**
 ```bash

@@ -6,8 +6,8 @@ The project demonstrates real-world concepts such as authentication, authorizati
 This project focuses on functionality, clarity, and clean UI, making it suitable for learning and showcasing full-stack development skills.
 
 🚀 Features
-👤 User
 
+👤 User
 User registration and login
 
 Browse and play songs

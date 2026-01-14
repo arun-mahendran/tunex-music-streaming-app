@@ -1,73 +1,72 @@
-🎵 TuneX – Music Streaming Web Application
+# 🎵 TuneX – Music Streaming Web Application
 
-TuneX is a role-based music streaming web application built using Flask.
-The project demonstrates real-world concepts such as authentication, authorization, playlist management, admin moderation, and AI-powered lyrics transcription.
+TuneX is a **role-based music streaming web application** built using Flask.  
+The project demonstrates real-world full-stack concepts such as authentication, role-based access control, playlist management, creator analytics, and AI-assisted lyrics generation.
 
-This project focuses on functionality, clarity, and clean UI, making it suitable for learning and showcasing full-stack development skills.
+The application focuses on practical implementation, seamless music streaming, and a clean user interface, making it suitable for learning and showcasing full-stack web development skills.
 
-🚀 Features
+---
 
-👤 User
-User registration and login
+## 🚀 Features
 
-Browse and play songs
+### 👤 User
+- User registration and login  
+- Browse and play songs  
+- Create, rename, and delete playlists  
+- Add and remove songs from playlists  
+- Playlist song reordering  
+- Dynamic lyrics display during playback  
+- Dark / Light theme toggle  
+- View notifications triggered by system actions  
 
-Create, rename, and delete playlists
+---
 
-Add songs to playlists
+### 🎨 Creator
+- Upload songs (MP3 / WAV)  
+- View and manage uploaded songs  
+- Track play count analytics  
+- Access creator dashboard and analytics view  
+- Receive notifications related to uploaded content  
 
-Drag-and-drop playlist reordering
+---
 
-Dynamic lyrics display during playback
+### 🛠 Admin
+- View platform-level statistics  
+- View registered users and creators  
+- Block and unblock users  
+- Delete songs with reason-based notifications  
+- Monitor overall platform activity  
 
-Dark / Light theme toggle
+⚠️ *Admin functionality is limited to platform control and does not include automated moderation.*
 
-Notifications from admin actions
+---
 
-🎨 Creator
+## 🤖 AI Integration
+- Lyrics are generated using the **Google Gemini API**  
+- Lyrics are generated based on song metadata or user input  
+- Line-by-line lyrics display in the player interface  
+- Generated lyrics are cached to avoid repeated API calls  
 
-Upload songs (MP3 / WAV)
+⚠️ *Lyrics are AI-generated, not speech-to-text transcription.*
 
-View uploaded songs
+---
 
-Track play count analytics
+## 🧱 Tech Stack
 
-Receive admin notifications
+| Layer | Technology |
+|------|-----------|
+| Frontend | HTML, CSS, JavaScript |
+| Backend | Python (Flask) |
+| ORM | SQLAlchemy |
+| Database | SQLite |
+| Authentication | Werkzeug Security (Password Hashing) |
+| AI Integration | Google Gemini API |
+| UI | Dark / Light Mode, CSS-based Styling |
 
-Creator dashboard & analytics view
+---
+## 📂 Project Structure
 
-🛠 Admin
-
-View platform statistics
-
-View all users and creators
-
-Block / unblock users
-
-Delete songs with reason-based notifications
-
-Monitor content and activity
-
-🤖 AI Integration
-
-Lyrics are generated using Google Gemini API
-
-Lyrics are transcribed from uploaded audio
-
-Clean line-by-line lyrics display
-
-Lyrics are cached after first generation
-
-🧱 Tech Stack
-Layer	Technology
-Frontend	HTML, CSS, JavaScript
-Backend	Python (Flask)
-ORM	SQLAlchemy
-Database	SQLite
-Authentication	Werkzeug Security
-AI	Google Gemini API
-UI	Glassmorphism, Dark/Light mode
-📂 Project Structure
+```text
 PROJECT/
 │
 ├── main.py
@@ -101,73 +100,82 @@ PROJECT/
 │
 └── .gitignore
 
+```
 
-⚙️ Installation & Setup
-1️⃣ Clone the repository
+## ⚙️ Installation & Setup
+
+### 1️⃣ Clone the repository
+```bash
 git clone https://github.com/your-username/tunex.git
 cd tunex
+```
 
-2️⃣ Create virtual environment
+### 2️⃣ Create a virtual environment
+
+**Windows**
+```bash
 python -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
+venv\Scripts\activate    
+```
 
-3️⃣ Install dependencies
+**macOS / Linux**
+```bash
+python -m venv venv
+source venv/bin/activate   
+```
+
+### 3️⃣ Install dependencies
+```bash
 pip install -r requirements.txt
+```
 
-4️⃣ Environment configuration
+### 4️⃣ Environment configuration
+Create a `.env` file:
+```env
+GEMINI_API_KEY = your_api_key_here
+SECRET_KEY = your_secret_key
+```
 
-Create a .env file:
-
-GEMINI_API_KEY=your_api_key_here
-SECRET_KEY=your_secret_key
-
-5️⃣ Run the application
+### 5️⃣ Run the application
+```bash
 python main.py
-
+```
 
 Access the app at:
-
 http://127.0.0.1:5000
 
-🔐 Default Admin Credentials
+## 🔐 Demo Admin Credentials (Local Use Only)
+
 Email: admin@tunex.com
+
 Password: admin123
 
+⚠️ These credentials are for **local development and demo purposes only**.
 
-⚠️ For demo purposes only.
 
-🎯 Learning Outcomes
 
-Role-based access control
+## 🎯 Learning Outcomes
+- Role-based access control implementation
+- Flask application structuring  
+- SQLAlchemy ORM usage  
+- Playlist and media management
+- Creator analytics handling
+- Admin-level platform control  
+- AI API integration  
+- Frontend–backend coordination  
+  
+---
 
-Flask application structuring
+## 📌 Future Enhancements
+- Global modal music player  
+- Time-synced lyrics display  
+- Music recommendation system
+- Song likes and favorites  
+- Cloud-based media storage  
 
-SQLAlchemy ORM usage
+---
 
-Playlist and media handling
-
-Admin moderation logic
-
-AI API integration
-
-Frontend–backend coordination
-
-UI/UX design using pure CSS & JS
-
-📌 Future Enhancements
-
-Global modal music player
-
-Accurate time-synced lyrics
-
-Recommendation system
-
-Song likes and favorites
-
-Cloud-based media storage
-
-🧑‍💻 Author
-
-Arun Mahendran B
-Pre-final Year Engineering Student
-Aspiring Software Engineer
+## 🧑‍💻 Author
+**Arun Mahendran B**  
+Pre-final Year Engineering Student  
+Aspiring Full-Stack Developer

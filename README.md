@@ -102,8 +102,6 @@ PROJECT/
 └── .gitignore
 
 
-✅ This exactly matches your screenshot.
-
 ⚙️ Installation & Setup
 1️⃣ Clone the repository
 git clone https://github.com/your-username/tunex.git

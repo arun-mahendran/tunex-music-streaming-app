@@ -1,5 +1,7 @@
+import os
+
 class Config:
-    SECRET_KEY = '#12345ABCDE'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///msa.sqlite3'
+    SECRET_KEY = os.getenv("SECRET_KEY")
+    SQLALCHEMY_DATABASE_URI = "sqlite:///msa.sqlite3"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    GEMINI_API_KEY = "AIzaSyD62UgmDbskWTX7iTxKwJ1s_7mwNGC5ax8"
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")

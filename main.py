@@ -24,7 +24,10 @@ app.config.from_object(Config)
 db.init_app(app)
 
 # Gemini Setup
-genai.configure(api_key=app.config['GEMINI_API_KEY'])
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+if not os.getenv("GEMINI_API_KEY"):
+    raise RuntimeError("GEMINI_API_KEY is not set in environment variables")
 
 # Use stable fast model (supports audio transcription)
 model = genai.GenerativeModel('gemini-2.5-flash')

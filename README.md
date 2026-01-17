@@ -5,6 +5,12 @@ The project demonstrates real-world full-stack concepts such as authentication, 
 
 The application focuses on practical implementation, seamless music streaming, and a clean user interface, making it suitable for learning and showcasing full-stack web development skills.
 
+## 🌐 Live Demo
+🔗 https://tunex-music-streaming-app.onrender.com
+
+⚠️ Note: The application is hosted on a free Render instance.  
+The first load may take up to 30–50 seconds due to cold start.
+
 ---
 
 ## 🚀 Features

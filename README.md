@@ -169,6 +169,22 @@ For evaluation or demonstration purposes, admin credentials can be provided upon
   
 ---
 
+## ⚠️ Deployment Limitation (Free Tier)
+
+This application is deployed on a free Render hosting plan.
+
+Due to the use of an ephemeral container on the free tier:
+- Application data stored using SQLite is **not persistent**
+- Registered users, uploaded songs, and playlists may reset after periods of inactivity or service restarts
+- Uploaded media files may not be retained across restarts
+
+This behavior is expected and does not reflect an issue with the application logic.
+
+🔧 **Production Consideration:**  
+For persistent data storage in a production environment, the application can be migrated to a managed PostgreSQL database and cloud-based storage for media files.
+
+---
+
 ## 📌 Future Enhancements
 - Global modal music player  
 - Time-synced lyrics display  
